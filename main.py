@@ -39,6 +39,33 @@ class cv3:
         g = np.abs(s1) + np.abs(s2)
         return g
 
+    @staticmethod
+    def ConsistentMethod(S, N1, N2, M1, M2):
+
+        def getVecG(x1, x2):
+            return np.transpose([x1, x2, 1])
+
+        indN = 1 - N1
+        indM = 1 - M1
+        DiapN = range(N1,N2)
+        DiapM = range(M1,M2)
+        G = np.zeros((S, S))
+
+        for k in range(0,S):
+            for n in DiapN:
+                for m in DiapM:
+                    G[k,:] = G[k,:]+(getVecG(n, m))[k] * np.transpose(getVecG(n, m))
+
+        Ginv = np.linalg.inv(G)
+
+        F = np.zeros(((N2 + indN, M2 + indM, S)))
+        for k in range(0,S):
+            for n in DiapN:
+                for m in DiapM:
+                    for l in range (0,S):
+                        F[n + indN, m + indM, k] = F[n + indN, m +indM, k] + Ginv[k, l] * (getVecG(n, m))[l]
+        print(F)
+        return F
 
     @staticmethod
     def Laplace(image, kernel):
@@ -70,42 +97,38 @@ class cv3:
 
 
 
-
+def ur(x1,x2):
+    ans = str(x1**2)+"a + " + str(x2**2) +"b + " + str(x1*x2)+ " c + " + str(x1)+" alf + " + str(x2)+' bet + '+' gam '
+    print("f("+str(x1)+", "+ str(x2)+") = " +ans)
 if __name__ == '__main__':
 
-    img = cv2.imread("rab2.jpg", 0)
-    cv2.imshow("input", img)
+    # img = cv2.imread("rab2.jpg", 0)
+    # cv2.imshow("input", img)
+    #
+    # result = cv3.threshold_processing(cv3.contour(img), 5)
+    # cv2.imshow("result", result)
+    #
+    # kernel = np.array([
+    #     [0,1,0],
+    #     [1,-4,1],
+    #     [0,1,0] ])
+    #
+    # res = cv3.Laplace(img,kernel)
+    #
+    #
+    # vals = res.flatten()
+    # plt.hist(vals, bins=range(256))
+    # plt.show()
+    #
+    # result = cv3.threshold_processing(res, 5)
+    #
+    #
+    # cv2.imshow("Laplace", result)
+    # for i in range(0,5):
+    #     for j in range(0,5):
+    #         ur(i,j)
 
-    result = cv3.threshold_processing(cv3.contour(img), 5)
-    cv2.imshow("result", result)
+    cv3.ConsistentMethod(3,-1,1,-1,1)
 
-    kernel =np.array([
-        [0,0,1,0,0],
-        [0,1,2,1,0],
-        [1,2,-17,2,1],
-        [0,1,2,1,0],
-        [0,0,1,0,0]])
-
-    # kernel = 1/2* np.array([
-    #     #     [1,0,1,],
-    #     #     [0,-4,0],
-    #     #     [1,0,1] ])
-
-    kernel = np.array([
-        [0,1,0],
-        [1,-4,1],
-        [0,1,0] ])
-
-    res = cv3.Laplace(img,kernel)
-
-
-    vals = res.flatten()
-    plt.hist(vals, bins=range(256))
-    plt.show()
-
-    result = cv3.threshold_processing(res, 5)
-
-
-    cv2.imshow("result", result)
 
     cv2.waitKey(0)
