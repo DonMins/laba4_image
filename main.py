@@ -21,7 +21,7 @@ class cv3:
         return img
 
     @staticmethod
-    def contour(img):
+    def simpleGradient(img):
         height = img.shape[0]
         width = img.shape[1]
 
@@ -41,14 +41,13 @@ class cv3:
 
     @staticmethod
     def ConsistentMethod(S, N1, N2, M1, M2):
-
         def getVecG(x1, x2):
-            return np.transpose([x1, x2, 1])
+            return np.transpose([x1**2,x2**2,x1*x2,x1, x2, 1])
 
         indN = 1 - N1
         indM = 1 - M1
-        DiapN = range(N1,N2)
-        DiapM = range(M1,M2)
+        DiapN = range(N1,N2+1)
+        DiapM = range(M1,M2+1)
         G = np.zeros((S, S))
 
         for k in range(0,S):
@@ -57,18 +56,17 @@ class cv3:
                     G[k,:] = G[k,:]+(getVecG(n, m))[k] * np.transpose(getVecG(n, m))
 
         Ginv = np.linalg.inv(G)
-
         F = np.zeros(((N2 + indN, M2 + indM, S)))
         for k in range(0,S):
             for n in DiapN:
                 for m in DiapM:
                     for l in range (0,S):
-                        F[n + indN, m + indM, k] = F[n + indN, m +indM, k] + Ginv[k, l] * (getVecG(n, m))[l]
-        print(F)
+                        F[n + indN - 1, m + indM - 1, k] = F[n + indN - 1, m + indM - 1, k] + Ginv[k, l] * \
+                                                           (getVecG(n, m))[l]
         return F
 
     @staticmethod
-    def Laplace(image, kernel):
+    def Convolution(image, kernel):
         heightM, widthM = kernel.shape
         height, width = image.shape
 
@@ -95,40 +93,46 @@ class cv3:
 
         return new_image
 
-
-
-def ur(x1,x2):
-    ans = str(x1**2)+"a + " + str(x2**2) +"b + " + str(x1*x2)+ " c + " + str(x1)+" alf + " + str(x2)+' bet + '+' gam '
-    print("f("+str(x1)+", "+ str(x2)+") = " +ans)
 if __name__ == '__main__':
 
-    # img = cv2.imread("rab2.jpg", 0)
-    # cv2.imshow("input", img)
-    #
-    # result = cv3.threshold_processing(cv3.contour(img), 5)
-    # cv2.imshow("result", result)
-    #
-    # kernel = np.array([
-    #     [0,1,0],
-    #     [1,-4,1],
-    #     [0,1,0] ])
-    #
-    # res = cv3.Laplace(img,kernel)
-    #
-    #
-    # vals = res.flatten()
-    # plt.hist(vals, bins=range(256))
-    # plt.show()
-    #
-    # result = cv3.threshold_processing(res, 5)
-    #
-    #
-    # cv2.imshow("Laplace", result)
-    # for i in range(0,5):
-    #     for j in range(0,5):
-    #         ur(i,j)
+    img = cv2.imread("rab2.jpg", 0)
+    cv2.imshow("input", img)
 
-    cv3.ConsistentMethod(3,-1,1,-1,1)
 
+    sgm = cv3.simpleGradient(img)
+    vals = sgm.flatten()
+    plt.hist(vals, bins=range(256))
+    plt.show()
+
+    result = cv3.threshold_processing(sgm, 4)
+    cv2.imshow("Simple gradient method", result)
+
+    kernel = np.array([
+        [0,1,0],
+        [1,-4,1],
+        [0,1,0] ])
+
+    res = cv3.Convolution(img, kernel)
+
+    vals = res.flatten()
+    plt.hist(vals, bins=range(256))
+    plt.show()
+
+    result = cv3.threshold_processing(res, 4)
+
+
+    cv2.imshow("Laplace Method", result)
+
+    f = cv3.ConsistentMethod(6,-2,2,-2,2)
+
+
+    a = (f[:,:,0])
+    b = (f[:,:,1])
+
+    Fv= 2*a + 2*b
+    print(Fv)
+    res = cv3.Convolution(img, Fv)
+    result = cv3.threshold_processing(res, 4)
+    cv2.imshow("Approval Method", result)
 
     cv2.waitKey(0)
